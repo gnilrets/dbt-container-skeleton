@@ -1,0 +1,18 @@
+# For more information on how to configure this file, please see:
+# https://docs.getdbt.com/docs/profile
+
+config:
+  send_anonymous_usage_stats: False
+
+default:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: host.docker.internal
+      user: sterling.paramore # TODO: change this!
+      password: ''
+      port: 5432
+      dbname: dbt_container_skeleton
+      schema: wh
+      threads: 4

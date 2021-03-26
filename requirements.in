@@ -1,0 +1,2 @@
+agate==1.6.1 # 1.6.2 is incompatible with dbt==0.19.0 (dependency bug, should be resolved later)
+dbt
