@@ -31,4 +31,5 @@ for developing, testing, and executing de-jobs.  The invoke file `tasks.py` make
 of two other python packages: pip-tools and jinja2.  To install all of these packages
 in the de-jobs environment, use pip:
 
-    pip install invoke pip-tools
+    pip install -r host_requirements.txt
+   pip install invoke pip-tools
