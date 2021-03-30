@@ -9,10 +9,10 @@ default:
   outputs:
     dev:
       type: postgres
-      host: host.docker.internal
-      user: sterling.paramore # TODO: change this!
-      password: ''
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
       port: 5432
-      dbname: dbt_container_skeleton
+      dbname: "{{ env_var('POSTGRES_DBNAME') }}"
       schema: wh
       threads: 4

@@ -5,6 +5,7 @@ RUN apt-get update \
         postgresql-client \
         libpq-dev \
         git \
+        bash-completion \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,6 +17,13 @@ ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /dbt-runner
 ENV DBT_PROFILES_DIR /dbt-runner/dbt
 WORKDIR /dbt-runner
+
+# Conveniences
+ENV PROMPT_COMMAND history -a
+RUN echo 'source /usr/share/bash-completion/bash_completion' >> /etc/bash.bashrc
+RUN echo 'export HISTFILE=/dbt-runner/.developer/history' >> $HOME/.bashrc
+RUN echo 'touch /dbt-runner/.developer/bashrc && source /dbt-runner/.developer/bashrc' >> $HOME/.bashrc
+
 
 COPY requirements.txt requirements.txt
 RUN pip install --upgrade pip

@@ -9,6 +9,8 @@ CONFIG_FILENAME='.config.env'
 SECRET_KEY_FILENAME=os.path.join(pathlib.Path.home(), '.dbt-container-skeleton')
 
 def get_secret_key():
+    'Returns the users secret key.  Creates a new one if necessary'
+
     if not os.path.exists(SECRET_KEY_FILENAME):
         key = Fernet.generate_key()
         with open(SECRET_KEY_FILENAME, 'wb') as key_file:
@@ -18,6 +20,8 @@ def get_secret_key():
 
 
 def read_config():
+    'Reads the encrypted configuration file'
+
     fencrypt = Fernet(get_secret_key())
 
     if not os.path.exists(CONFIG_FILENAME):
@@ -28,6 +32,8 @@ def read_config():
     return config
 
 def write_config(config):
+    'Writes the encrypted configuration file'
+
     fencryptor = Fernet(get_secret_key())
 
     with open(CONFIG_FILENAME, 'wb') as config_file:
@@ -37,11 +43,16 @@ def write_config(config):
 
 @task
 def config_show(ctx):
+    'Shows the current dbt container configuration (SECRETS IN PLAINTEXT)'
+
     print(json.dumps(read_config(), indent=4))
 
 
 @task
 def config(ctx):
+    'Set dbt container configuration and environment variables'
+
+
     with open('config_template.env') as template_file:
         file_lines = template_file.readlines()
         config_template = {}
