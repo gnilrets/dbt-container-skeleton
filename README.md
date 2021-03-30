@@ -50,8 +50,6 @@ The container that runs mounts your local repository into the
 container, so whenever you modify code on your host machine, it will
 be immediately available in the container.
 
-# TODO: Bash history
-
 ## Use
 
 ### Next steps for your project
