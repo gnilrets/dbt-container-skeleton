@@ -44,6 +44,7 @@ the host and database name as well
 Lastly, open up a shell in the dbt container and try running the example dbt project
 
     inv dbt-shell
+    dbt seed
     dbt run
 
 The container that runs mounts your local repository into the

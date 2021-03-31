@@ -34,6 +34,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 # using the `{{ config(...) }}` macro.
 models:
   dbt_container_skeleton:
-      # Applies to all files under models/example/
-      example:
-          materialized: view
+      materialized: table
+      staging:
+        materialized: view
+        tags: ["staging", "hourly"]
