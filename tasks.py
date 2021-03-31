@@ -99,7 +99,7 @@ def build(ctx):
     ctx.run(f'docker build -t dbt-runner -f Dockerfile .')
 
 @task
-def dbt_shell(ctx):
+def dbt_shell(ctx, args=''):
     'Open a shell to the dbt runner container'
 
     config = read_config()
@@ -109,4 +109,4 @@ def dbt_shell(ctx):
         envs.append(key)
 
     envs_str = ' '.join(['--env ' + env for env in envs])
-    ctx.run(f'docker run --rm -it {envs_str} -v ${{PWD}}:/dbt-runner -w /dbt-runner/dbt dbt-runner /bin/bash')
+    ctx.run(f'docker run --rm -it {envs_str} -v ${{PWD}}:/dbt-runner -w /dbt-runner/dbt {args} dbt-runner /bin/bash')

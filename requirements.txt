@@ -50,7 +50,9 @@ cffi==1.14.5
 chardet==3.0.4
     # via requests
 colorama==0.4.3
-    # via dbt-core
+    # via
+    #   dbt-core
+    #   dtspec
 cryptography==3.4.7
     # via
     #   azure-storage-blob
@@ -78,6 +80,8 @@ dbt==0.19.0
     # via -r requirements.in
 decorator==4.4.2
     # via networkx
+dtspec==0.6.3
+    # via -r requirements.in
 google-api-core[grpc]==1.23.0
     # via
     #   dbt-bigquery
@@ -123,7 +127,9 @@ jmespath==0.10.0
 json-rpc==1.13.0
     # via dbt-core
 jsonschema==3.1.1
-    # via hologram
+    # via
+    #   dtspec
+    #   hologram
 keyring==21.8.0
     # via snowflake-connector-python
 leather==0.3.3
@@ -137,11 +143,17 @@ minimal-snowplow-tracker==0.0.2
 msrest==0.6.21
     # via azure-storage-blob
 networkx==2.5
-    # via dbt-core
+    # via
+    #   dbt-core
+    #   dtspec
+numpy==1.20.2
+    # via pandas
 oauthlib==3.1.0
     # via requests-oauthlib
 oscrypto==1.2.1
     # via snowflake-connector-python
+pandas==1.2.3
+    # via dtspec
 parsedatetime==2.6
     # via agate
 proto-plus==1.18.1
@@ -175,6 +187,7 @@ python-dateutil==2.8.1
     # via
     #   botocore
     #   hologram
+    #   pandas
 python-slugify==4.0.1
     # via agate
 pytimeparse==1.1.8
@@ -183,6 +196,7 @@ pytz==2020.5
     # via
     #   babel
     #   google-api-core
+    #   pandas
     #   snowflake-connector-python
 pyyaml==5.4.1
     # via dbt-core
