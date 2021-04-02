@@ -16,3 +16,13 @@ default:
       dbname: "{{ env_var('POSTGRES_DBNAME') }}"
       schema: wh
       threads: 4
+
+    dtspec:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
+      port: 5432
+      dbname: "{{ env_var('POSTGRES_DBNAME') }}_dtspec"
+      schema: wh
+      threads: 4

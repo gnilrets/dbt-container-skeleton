@@ -5,20 +5,18 @@
 #    pip-compile requirements.in
 #
 agate==1.6.1
-    # via
-    #   -r requirements.in
-    #   dbt-core
+    # via dbt-core
 asn1crypto==1.4.0
     # via
     #   oscrypto
     #   snowflake-connector-python
 attrs==20.3.0
     # via jsonschema
-azure-common==1.1.26
+azure-common==1.1.27
     # via
     #   dbt-snowflake
     #   snowflake-connector-python
-azure-core==1.12.0
+azure-core==1.13.0
     # via azure-storage-blob
 azure-storage-blob==12.8.0
     # via
@@ -59,35 +57,35 @@ cryptography==3.4.7
     #   dbt-snowflake
     #   pyopenssl
     #   snowflake-connector-python
-dbt-bigquery==0.19.0
+dbt-bigquery==0.19.1
     # via dbt
-dbt-core==0.19.0
+dbt-core==0.19.1
     # via
     #   dbt
     #   dbt-bigquery
     #   dbt-postgres
     #   dbt-redshift
     #   dbt-snowflake
-dbt-postgres==0.19.0
+dbt-postgres==0.19.1
     # via
     #   dbt
     #   dbt-redshift
-dbt-redshift==0.19.0
+dbt-redshift==0.19.1
     # via dbt
-dbt-snowflake==0.19.0
+dbt-snowflake==0.19.1
     # via dbt
-dbt==0.19.0
+dbt==0.19.1
     # via -r requirements.in
 decorator==4.4.2
     # via networkx
-dtspec==0.6.3
+dtspec==0.7.1
     # via -r requirements.in
 google-api-core[grpc]==1.23.0
     # via
     #   dbt-bigquery
     #   google-cloud-bigquery
     #   google-cloud-core
-google-auth==1.28.0
+google-auth==1.29.0
     # via google-api-core
 google-cloud-bigquery==2.3.1
     # via dbt-bigquery
@@ -103,15 +101,17 @@ googleapis-common-protos==1.52.0
     # via
     #   dbt-bigquery
     #   google-api-core
-grpcio==1.36.1
+greenlet==1.0.0
+    # via sqlalchemy
+grpcio==1.37.0
     # via google-api-core
-hologram==0.0.12
+hologram==0.0.13
     # via dbt-core
 idna==2.9
     # via
     #   dbt-core
     #   requests
-importlib-metadata==3.7.3
+importlib-metadata==3.10.1
     # via jsonschema
 isodate==0.6.0
     # via
@@ -119,7 +119,9 @@ isodate==0.6.0
     #   dbt-core
     #   msrest
 jinja2==2.11.2
-    # via dbt-core
+    # via
+    #   dbt-core
+    #   dtspec
 jmespath==0.10.0
     # via
     #   boto3
@@ -138,11 +140,17 @@ logbook==1.5.3
     # via dbt-core
 markupsafe==1.1.1
     # via jinja2
+mashumaro==2.0
+    # via dbt-core
 minimal-snowplow-tracker==0.0.2
     # via dbt-core
+msgpack==1.0.2
+    # via mashumaro
 msrest==0.6.21
     # via azure-storage-blob
-networkx==2.5
+nest-asyncio==1.5.1
+    # via dtspec
+networkx==2.5.1
     # via
     #   dbt-core
     #   dtspec
@@ -152,13 +160,13 @@ oauthlib==3.1.0
     # via requests-oauthlib
 oscrypto==1.2.1
     # via snowflake-connector-python
-pandas==1.2.3
+pandas==1.2.4
     # via dtspec
 parsedatetime==2.6
     # via agate
 proto-plus==1.18.1
     # via google-cloud-bigquery
-protobuf==3.15.6
+protobuf==3.15.8
     # via
     #   dbt-bigquery
     #   google-api-core
@@ -199,7 +207,10 @@ pytz==2020.5
     #   pandas
     #   snowflake-connector-python
 pyyaml==5.4.1
-    # via dbt-core
+    # via
+    #   dbt-core
+    #   dtspec
+    #   mashumaro
 requests-oauthlib==1.3.0
     # via msrest
 requests==2.23.0
@@ -213,7 +224,7 @@ requests==2.23.0
     #   snowflake-connector-python
 rsa==4.7.2
     # via google-auth
-s3transfer==0.3.6
+s3transfer==0.3.7
     # via boto3
 six==1.15.0
     # via
@@ -234,20 +245,30 @@ six==1.15.0
     #   pyopenssl
     #   python-dateutil
 snowflake-connector-python[secure-local-storage]==2.3.6
-    # via dbt-snowflake
+    # via
+    #   dbt-snowflake
+    #   snowflake-sqlalchemy
+snowflake-sqlalchemy==1.2.4
+    # via dtspec
+sqlalchemy==1.4.8
+    # via
+    #   dtspec
+    #   snowflake-sqlalchemy
 sqlparse==0.3.1
     # via dbt-core
 text-unidecode==1.3
     # via python-slugify
 typing-extensions==3.7.4.3
-    # via dbt-core
+    # via
+    #   dbt-core
+    #   mashumaro
 urllib3==1.25.11
     # via
     #   botocore
     #   dbt-snowflake
     #   requests
     #   snowflake-connector-python
-werkzeug==0.16.1
+werkzeug==1.0.1
     # via dbt-core
 zipp==3.4.1
     # via importlib-metadata

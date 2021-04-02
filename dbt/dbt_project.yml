@@ -36,5 +36,18 @@ models:
   dbt_container_skeleton:
       materialized: table
       staging:
+        schema: staging
         materialized: view
         tags: ["staging", "hourly"]
+      marts:
+        core:
+          materialized: table
+          intermediate:
+            schema: intermediate
+
+
+seeds:
+  dbt_container_skeleton:
+    enabled: true
+    schema: raw
+    quote_columns: False

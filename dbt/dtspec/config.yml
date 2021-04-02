@@ -1,0 +1,71 @@
+# A target environment is where the output of data transformations appear.
+# Typically, there will only be on target environment.
+target_environments:
+  # The target environment IS NOT your production environment.  It needs to be a separate
+  # database where dbt will run against the test data that dtspec generates.  The name
+  # of this environment needs to be the same as a target defined in dbt profiles.yml (in this case `dtspec`)
+  dtspec:
+    # Field names here follow the same conventions as dbt profiles.yml (https://docs.getdbt.com/dbt-cli/configure-your-profile)
+    type: postgres
+    host: "{{ env_var('POSTGRES_HOST') }}"
+    port: 5432
+    user: "{{ env_var('POSTGRES_USER') }}"
+    password: "{{ env_var('POSTGRES_PASSWORD') }}"
+    dbname: "{{ env_var('POSTGRES_DBNAME') }}_dtspec"
+
+# A source environment is where source data is located.  It may be in the same database
+# as the target environment or it may be different if the data warehouse supports it (e.g., Snowflake).
+# It is also possible to define several source environments if your source data is spread
+# across multiple databases.
+source_environments:
+  raw:
+    # Use `tables` to specify source tables that need to be present to run tests.
+    tables:
+      # `wh_raw` is the name of a namespace (aka schema) in the `raw` source environment
+      wh_raw:
+        # tables may be listed indivdually (or, use `wh_raw: '*'` to indicate all tables within the `wh_raw` namespace)
+        - raw_customers
+        - raw_orders
+        - raw_payments
+
+    # In order to run tests, we need to replicate the table schemas in the test environment.
+    # The schema section here contains credentials for a database where those tables are defined.
+    # This is likely a production database (in your warehouse), or is a production replica.
+    # dtspec only uses this database to read reflect the table schemas (via `dtspec db --fetch-schemas`).
+    schema:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      port: 5432
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('POSTGRES_DBNAME') }}"
+    # The test section contains credentials for a database where test data will be created.
+    # Data in this database is destroyed and rebuilt for every run of dtspec and SHOULD NOT be
+    # the same as the schema credentials defined above.
+    test:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      port: 5432
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('POSTGRES_DBNAME') }}_dtspec"
+
+  # Pretending snapshots are in a different database because Postgres doesn't support cross-db queries.
+  # This is how you would do it if snapshots were in a different database than other raw source data.
+  snapshots:
+    tables:
+      snapshots: '*'
+    schema:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      port: 5432
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('POSTGRES_DBNAME') }}"
+    test:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"
+      port: 5432
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('POSTGRES_DBNAME') }}_dtspec"

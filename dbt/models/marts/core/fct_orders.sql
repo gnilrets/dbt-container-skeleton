@@ -19,6 +19,7 @@ final as (
         orders.customer_id,
         orders.order_date,
         orders.status,
+        order_payments.order_id is not null as has_payment,
 
         {% for payment_method in payment_methods -%}
 

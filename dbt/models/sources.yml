@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  # Not used in this example, but they could be
+  - name: snapshots
+    schema: snapshots
+    tables:
+      - name: snap_customers
+      - name: snap_orders
+      - name: snap_payments
+
+  - name: raw
+    schema: wh_raw
+    tables:
+      - name: raw_customers
+      - name: raw_orders
+      - name: raw_payments
