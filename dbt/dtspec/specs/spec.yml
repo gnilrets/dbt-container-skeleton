@@ -1,0 +1,353 @@
+---
+
+# For jaffle_shop, a single generic identifier is sufficient.  We'll prefix
+# all named identifiers with something that indicates what they are - cust1, order1, etc
+identifiers:
+  - identifier: generic
+    attributes:
+      - field: id
+        generator: unique_integer
+
+# All the raw sources used in jaffle_shop
+sources:
+  - source: {{ dbt_source('raw', 'raw_customers') }}
+    identifier_map:
+      - column: id
+        identifier:
+          name: generic
+          attribute: id
+
+  - source: {{ dbt_source('raw', 'raw_orders') }}
+    identifier_map:
+      - column: id
+        identifier:
+          name: generic
+          attribute: id
+      - column: user_id
+        identifier:
+          name: generic
+          attribute: id
+
+  - source: {{ dbt_source('raw', 'raw_payments') }}
+    identifier_map:
+      - column: id
+        identifier:
+          name: generic
+          attribute: id
+      - column: order_id
+        identifier:
+          name: generic
+          attribute: id
+
+# We could test more of the models built by dbt.  But at the end of the day,
+# we really only care about the tables that our end users use.
+targets:
+  - target: {{ dbt_ref('dim_customers') }}
+    identifier_map:
+      - column: customer_id
+        identifier:
+          name: generic
+          attribute: id
+
+  - target: {{ dbt_ref('fct_orders') }}
+    identifier_map:
+      - column: order_id
+        identifier:
+          name: generic
+          attribute: id
+      - column: customer_id
+        identifier:
+          name: generic
+          attribute: id
+
+# A simple factory  that ties all of the objects together.
+factories:
+  - factory: CustomerWithOrderAndPayment
+    data:
+      - source: {{ dbt_source('raw', 'raw_customers') }}
+        table: |
+          | id    | first_name |
+          | -     | -          |
+          | cust1 | Kelly      |
+
+      - source: {{ dbt_source('raw', 'raw_orders') }}
+        table: |
+          | id     | user_id |
+          | -      | -       |
+          | order1 | cust1   |
+
+      - source: {{ dbt_source('raw', 'raw_payments') }}
+        table: |
+          | id       | order_id |
+          | -        | -        |
+          | payment1 | order1   |
+
+# Typically, we have a separate scenario for each target table, however your
+# project's needs may differ.
+scenarios:
+  - scenario: Building dim_customers
+    factory:
+      parents:
+        # This factory is used by default in all of the cases that belong to this scenario.
+        - CustomerWithOrderAndPayment
+
+    cases:
+      # kind of a useless case, but I always write these to test that the scenario
+      # factory will generate target data.
+      - case: target has data
+        expected:
+          data:
+            - target: {{ dbt_ref('dim_customers') }}
+              table: |
+                | customer_id |
+                | -           |
+                | cust1       |
+
+      - case: populating number of orders
+        # In this case, we're building data that is a small variation from the
+        # data generated in the case above.  Instead of raw_orders being a single
+        # record, it is composed of 3 records for this case.  We're essentially
+        # overriding the raw_orders source table of the scenario factory.  This
+        # override only applies to this specific case.
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id |
+                | -      | -       |
+                | order1 | cust1   |
+                | order2 | cust1   |
+                | order3 | cust1   |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('dim_customers') }}
+              table: |
+                | customer_id | number_of_orders |
+                | -           | -                |
+                | cust1       | 3                |
+
+      - case: populating most recent order date
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id | order_date |
+                | -      | -       | -          |
+                | order1 | cust1   | 2017-01-01 |
+                | order2 | cust1   | 2018-01-01 |
+                | order3 | cust1   | 2019-01-01 |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('dim_customers') }}
+              table: |
+                | customer_id | most_recent_order |
+                | -           | -                 |
+                | cust1       | 2019-01-01        |
+
+      - case: populating customer lifetime value
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id |
+                | -      | -       |
+                | order1 | cust1   |
+                | order2 | cust1   |
+
+            - source: {{ dbt_source('raw', 'raw_payments') }}
+              table: |
+                | order_id | amount  | payment_method |
+                | -        | -       | -              |
+                | order1   | 200     | credit_card    |
+                | order2   | 300     | credit_card    |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('dim_customers') }}
+              table: |
+                | customer_id | customer_lifetime_value |
+                | -           | -                       |
+                | cust1       | 5                       |
+
+      # This one was a bit of a surpise to me when I was writing these
+      # specs.  I assumed they would be ignored and when I originally
+      # wrote the test, and it failed for this reason.
+      #
+      # These are the kinds of really critical tests that dtspec is
+      # designed to handle.  It would be really easy for another
+      # developer to modify the SQL and mistakenly break this test,
+      # thinking that unknown payment methods are strictly ignored,
+      # when in fact we do still want them to be included in the totals.
+      - case: unknown payment methods are not ignored when populating customer lifetime value
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id |
+                | -      | -       |
+                | order1 | cust1   |
+                | order2 | cust1   |
+
+            - source: {{ dbt_source('raw', 'raw_payments') }}
+              table: |
+                | order_id | amount  | payment_method |
+                | -        | -       | -              |
+                | order1   | 200     | credit_card    |
+                | order2   | 300     | :shrug:        |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('dim_customers') }}
+              table: |
+                | customer_id | customer_lifetime_value |
+                | -           | -                       |
+                | cust1       | 5                       |
+
+
+
+
+  - scenario: Building fct_orders
+    factory:
+      parents:
+        - CustomerWithOrderAndPayment
+
+    cases:
+      - case: target has data
+        expected:
+          data:
+            - target: {{ dbt_ref('fct_orders') }}
+              table: |
+                | order_id | customer_id |
+                | -        | -           |
+                | order1   | cust1       |
+
+      - case: populating the right payment column
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id |
+                | -      | -       |
+                | order1 | cust1   |
+                | order2 | cust1   |
+                | order3 | cust1   |
+                | order4 | cust1   |
+
+            - source: {{ dbt_source('raw', 'raw_payments') }}
+              table: |
+                | order_id | amount  | payment_method |
+                | -        | -       | -              |
+                | order1   | 100     | credit_card    |
+                | order2   | 200     | coupon         |
+                | order3   | 300     | bank_transfer  |
+                | order4   | 400     | gift_card      |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('fct_orders') }}
+              table: |
+                | order_id | credit_card_amount | coupon_amount | bank_transfer_amount | gift_card_amount | amount |
+                | -        | -                  | -             | -                    | -                | -      |
+                | order1   | 1                  | 0             | 0                    | 0                | 1      |
+                | order2   | 0                  | 2             | 0                    | 0                | 2      |
+                | order3   | 0                  | 0             | 3                    | 0                | 3      |
+                | order4   | 0                  | 0             | 0                    | 4                | 4      |
+              by:
+                - order_id
+
+
+      - case: unknown payment methods still show up in totals, but nowhere else
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id |
+                | -      | -       |
+                | order1 | cust1   |
+
+            - source: {{ dbt_source('raw', 'raw_payments') }}
+              table: |
+                | order_id | amount  | payment_method |
+                | -        | -       | -              |
+                | order1   | 100     | :shrug:        |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('fct_orders') }}
+              table: |
+                | order_id | credit_card_amount | coupon_amount | bank_transfer_amount | gift_card_amount | amount |
+                | -        | -                  | -             | -                    | -                | -      |
+                | order1   | 0                  | 0             | 0                    | 0                | 1      |
+
+
+      - case: multiple payments for the same order
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id |
+                | -      | -       |
+                | order1 | cust1   |
+
+            - source: {{ dbt_source('raw', 'raw_payments') }}
+              table: |
+                | order_id | amount  | payment_method |
+                | -        | -       | -              |
+                | order1   | 100     | credit_card    |
+                | order1   | 200     | coupon         |
+                | order1   | 300     | bank_transfer  |
+                | order1   | 400     | gift_card      |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('fct_orders') }}
+              table: |
+                | order_id | credit_card_amount | coupon_amount | bank_transfer_amount | gift_card_amount | amount |
+                | -        | -                  | -             | -                    | -                | -      |
+                | order1   | 1                  | 2             | 3                    | 4                | 10     |
+
+      - case: null status passes through
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id | status |
+                | -      | -       | -      |
+                | order1 | cust1   | {NULL} |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('fct_orders') }}
+              table: |
+                | order_id | status |
+                | -        | -      |
+                | order1   | {NULL} |
+
+      - case: populating has_payment
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_orders') }}
+              table: |
+                | id     | user_id |
+                | -      | -       |
+                | order1 | cust1   |
+                | order2 | cust1   |
+
+            - source: {{ dbt_source('raw', 'raw_payments') }}
+              table: |
+                | order_id | amount  | payment_method |
+                | -        | -       | -              |
+                | order2   | 200     | coupon         |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('fct_orders') }}
+              table: |
+                | order_id | has_payment |
+                | -        | -           |
+                | order1   | {False}     |
+                | order2   | {True}      |
+              by:
+                - order_id

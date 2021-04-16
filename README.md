@@ -51,6 +51,18 @@ The container that runs mounts your local repository into the
 container, so whenever you modify code on your host machine, it will
 be immediately available in the container.
 
+### dtspec
+
+This project also supports running [dtspec](https://github.com/inside-track/dtspec) tests.
+To run those, first create a test database on your host's postgres server named
+`<POSTGRES_DBNAME>_dtspec` and initialize the database via (in the `dbt-shell`)
+
+    dtspec db --init-test-db
+
+Then run the dtspec tests with:
+
+    dtspec test-dbt
+
 ## Use
 
 ### Next steps for your project

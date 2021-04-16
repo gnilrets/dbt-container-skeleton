@@ -1,0 +1,14 @@
+---
+version: '0.1'
+description: |
+  Variables in use -
+    TODAY is {{ TODAY }}
+    YESTERDAY is {{ YESTERDAY }}
+    TOMORROW is {{ TOMORROW }}
+    UTCNOW is {{ UTCNOW }}
+
+identifiers: []
+sources: []
+targets: []
+factories: []
+scenarios: []
