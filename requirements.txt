@@ -6,12 +6,16 @@
 #
 agate==1.6.1
     # via dbt-core
+appdirs==1.4.4
+    # via sqlfluff
 asn1crypto==1.4.0
     # via
     #   oscrypto
     #   snowflake-connector-python
 attrs==20.3.0
-    # via jsonschema
+    # via
+    #   jsonschema
+    #   pytest
 azure-common==1.1.27
     # via
     #   dbt-snowflake
@@ -24,6 +28,8 @@ azure-storage-blob==12.8.0
     #   snowflake-connector-python
 babel==2.9.0
     # via agate
+bench-it==1.0.1
+    # via sqlfluff
 boto3==1.15.18
     # via
     #   dbt-redshift
@@ -32,6 +38,8 @@ botocore==1.18.18
     # via
     #   boto3
     #   s3transfer
+cached-property==1.5.2
+    # via sqlfluff
 cachetools==4.2.1
     # via google-auth
 certifi==2020.12.5
@@ -46,11 +54,18 @@ cffi==1.14.5
     #   google-crc32c
     #   snowflake-connector-python
 chardet==3.0.4
-    # via requests
+    # via
+    #   diff-cover
+    #   requests
+click==7.1.2
+    # via sqlfluff
 colorama==0.4.3
     # via
     #   dbt-core
     #   dtspec
+    #   sqlfluff
+configparser==5.0.2
+    # via sqlfluff
 cryptography==3.4.7
     # via
     #   azure-storage-blob
@@ -78,6 +93,8 @@ dbt==0.19.1
     # via -r requirements.in
 decorator==4.4.2
     # via networkx
+diff-cover==5.0.1
+    # via sqlfluff
 dtspec==0.7.1
     # via -r requirements.in
 google-api-core[grpc]==1.23.0
@@ -113,15 +130,24 @@ idna==2.9
     #   requests
 importlib-metadata==3.10.1
     # via jsonschema
+inflect==5.3.0
+    # via jinja2-pluralize
+iniconfig==1.1.1
+    # via pytest
 isodate==0.6.0
     # via
     #   agate
     #   dbt-core
     #   msrest
+jinja2-pluralize==0.3.0
+    # via diff-cover
 jinja2==2.11.2
     # via
     #   dbt-core
+    #   diff-cover
     #   dtspec
+    #   jinja2-pluralize
+    #   sqlfluff
 jmespath==0.10.0
     # via
     #   boto3
@@ -160,10 +186,20 @@ oauthlib==3.1.0
     # via requests-oauthlib
 oscrypto==1.2.1
     # via snowflake-connector-python
+oyaml==1.0
+    # via sqlfluff
+packaging==20.9
+    # via pytest
 pandas==1.2.4
     # via dtspec
 parsedatetime==2.6
     # via agate
+pathspec==0.8.1
+    # via sqlfluff
+pluggy==0.13.1
+    # via
+    #   diff-cover
+    #   pytest
 proto-plus==1.18.1
     # via google-cloud-bigquery
 protobuf==3.15.8
@@ -175,6 +211,8 @@ protobuf==3.15.8
     #   proto-plus
 psycopg2-binary==2.8.6
     # via dbt-postgres
+py==1.10.0
+    # via pytest
 pyasn1-modules==0.2.8
     # via google-auth
 pyasn1==0.4.8
@@ -185,12 +223,18 @@ pycparser==2.20
     # via cffi
 pycryptodomex==3.10.1
     # via snowflake-connector-python
+pygments==2.8.1
+    # via diff-cover
 pyjwt==1.7.1
     # via snowflake-connector-python
 pyopenssl==20.0.1
     # via snowflake-connector-python
+pyparsing==2.4.7
+    # via packaging
 pyrsistent==0.17.3
     # via jsonschema
+pytest==6.2.3
+    # via sqlfluff
 python-dateutil==2.8.1
     # via
     #   botocore
@@ -211,6 +255,7 @@ pyyaml==5.4.1
     #   dbt-core
     #   dtspec
     #   mashumaro
+    #   oyaml
 requests-oauthlib==1.3.0
     # via msrest
 requests==2.23.0
@@ -254,14 +299,19 @@ sqlalchemy==1.4.8
     # via
     #   dtspec
     #   snowflake-sqlalchemy
+sqlfluff==0.5.2
+    # via -r requirements.in
 sqlparse==0.3.1
     # via dbt-core
 text-unidecode==1.3
     # via python-slugify
+toml==0.10.2
+    # via pytest
 typing-extensions==3.7.4.3
     # via
     #   dbt-core
     #   mashumaro
+    #   sqlfluff
 urllib3==1.25.11
     # via
     #   botocore
