@@ -19,13 +19,31 @@ def get_secret_key():
     return open(SECRET_KEY_FILENAME, 'rb').read()
 
 
+def read_config_template():
+    with open('config_template.env') as template_file:
+        file_lines = template_file.readlines()
+        config_template = {}
+        for l in file_lines:
+            l = l.strip()
+            if len(l) == 0 or l[0] == '#':
+                continue
+            key, value = l.split('=', 1)
+            config_template[key] = value
+    return config_template
+
+
 def read_config():
     'Reads the encrypted configuration file'
 
     fencrypt = Fernet(get_secret_key())
 
     if not os.path.exists(CONFIG_FILENAME):
-        return {}
+        default_config = read_config_template()
+        config = {
+            key: os.environ.get(key, value)
+            for key, value in default_config.items()
+        }
+        return config
 
     with open(CONFIG_FILENAME, 'rb') as config_file:
         config = json.loads(fencrypt.decrypt(config_file.read()))
@@ -53,16 +71,7 @@ def config(ctx):
     'Set dbt container configuration and environment variables'
 
 
-    with open('config_template.env') as template_file:
-        file_lines = template_file.readlines()
-        config_template = {}
-        for l in file_lines:
-            l = l.strip()
-            if len(l) == 0 or l[0] == '#':
-                continue
-            key, value = l.split('=', 1)
-            config_template[key] = value
-
+    config_template = read_config_template()
     config = {**config_template, **read_config()}
 
     print('NOTE: Press enter at any time to accept the default or existing value. Use "None" to indicate Null/None')
@@ -93,20 +102,71 @@ def requirements_upgrade(ctx):
     ctx.run('pip-compile -U requirements.in')
 
 @task
-def build(ctx):
+def build(ctx, ci=False):
     'Build the dbt runner container'
 
-    ctx.run(f'docker build -t dbt-runner -f Dockerfile .')
+    cache_from_arg = '--cache-from=dbt-runner' if ci else ''
+    ctx.run(f'docker build -t dbt-runner {cache_from_arg} -f Dockerfile .')
 
-@task
-def dbt_shell(ctx, args=''):
-    'Open a shell to the dbt runner container'
 
+def docker_run_dbt_cmd(command, interactive=False, docker_args=''):
     config = read_config()
     envs = []
     for key, value in config.items():
         os.environ[key] = value or ''
         envs.append(key)
+    envs_arg = ' '.join(['--env ' + env for env in envs])
 
-    envs_str = ' '.join(['--env ' + env for env in envs])
-    ctx.run(f'docker run --rm -it {envs_str} -v ${{PWD}}:/dbt-runner -w /dbt-runner/dbt {args} dbt-runner /bin/bash')
+    project_root='/dbt-runner'
+    mount_project_arg = f'-v ${{PWD}}:{project_root}'
+
+    interactive_arg = ''
+    if interactive:
+        interactive_arg = '-it'
+
+    return f'docker run --rm {interactive_arg} {envs_arg} {mount_project_arg} -w {project_root}/dbt {docker_args} dbt-runner {command}'
+
+
+@task
+def dbt_shell(ctx, docker_args=''):
+    'Open a shell to the dbt runner container'
+    ctx.run(docker_run_dbt_cmd(
+        '/bin/bash',
+        interactive=True,
+        docker_args=docker_args
+    ))
+
+@task
+def lint(ctx, docker_args=''):
+    'Runs all linters'
+    ctx.run(docker_run_dbt_cmd(
+        '"sqlfluff lint models"',
+        interactive=False,
+        docker_args=docker_args
+    ))
+
+@task
+def init_test_db(ctx, docker_args='', ci=False):
+    'Initializes the test database'
+
+    if ci:
+        docker_args += '--network=host'
+
+    ctx.run(docker_run_dbt_cmd(
+        '"dtspec db --init-test-db"',
+        interactive=False,
+        docker_args=docker_args
+    ))
+
+@task
+def dtspec_test_dbt(ctx, docker_args='', ci=False):
+    'Runs the dtspec dbt tests'
+
+    if ci:
+        docker_args += '--network=host'
+
+    ctx.run(docker_run_dbt_cmd(
+        '"dtspec test-dbt"',
+        interactive=False,
+        docker_args=docker_args
+    ))

@@ -318,7 +318,7 @@ urllib3==1.25.11
     #   dbt-snowflake
     #   requests
     #   snowflake-connector-python
-werkzeug==1.0.1
+werkzeug==0.16.1
     # via dbt-core
 zipp==3.4.1
     # via importlib-metadata

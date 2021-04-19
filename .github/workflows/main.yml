@@ -1,0 +1,72 @@
+name: CI
+
+on: [push]
+
+jobs:
+  test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DBNAME: postgres
+
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - run: pip install -r host_requirements.txt
+
+      - name: Cache docker build
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-docker-build
+        with:
+          path: docker-cache.tar
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Dockerfile', 'requirements.txt', 'dbt/packages.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: Load docker cache if exists
+        run: |
+          set +o pipefail
+          docker load -i docker-cache.tar | true
+      - name: Build docker image
+        run: inv build --ci
+      - name: Save docker cache
+        run: docker save -o docker-cache.tar dbt-runner
+
+
+      - name: Run linters
+        run: inv lint
+      - name: Initialize test database
+        run: |
+          PGPASSWORD=${POSTGRES_PASSWORD} createdb -h ${POSTGRES_HOST} -U ${POSTGRES_USER} ${POSTGRES_DBNAME}_dtspec
+          inv init-test-db --ci
+
+      - name: Run dtpsec test
+        run: inv dtspec-test-dbt --ci
