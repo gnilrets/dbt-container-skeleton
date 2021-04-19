@@ -19,19 +19,18 @@ final as (
         orders.customer_id,
         orders.order_date,
         orders.status,
-        order_payments.order_id is not null as has_payment,
-
         {% for payment_method in payment_methods -%}
 
         order_payments.{{payment_method}}_amount,
 
         {% endfor -%}
 
-        order_payments.total_amount as amount
+        order_payments.total_amount as amount,
+        order_payments.order_id is not null as has_payment
 
     from orders
 
-    left join order_payments using (order_id)
+    left join order_payments on orders.order_id = order_payments.order_id
 
 )
 

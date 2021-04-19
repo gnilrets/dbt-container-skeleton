@@ -9,8 +9,8 @@
     }}
 
     SELECT
-      *,
-      CURRENT_TIMESTAMP::TIMESTAMP AS dbt_snapshot_at
+        *,
+        CURRENT_TIMESTAMP::TIMESTAMP AS dbt_snapshot_at
     FROM
-      {{ ref('raw_payments') }}
+        {{ ref('raw_payments') }}
 {% endsnapshot %}
