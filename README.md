@@ -1,16 +1,34 @@
 # dbt container skeleton
 
 This project is intended to be used as a way to bootstrap a
-containerized dbt development environment.  This helps teams work
-together by ensuring that everyone is using the same version of dbt
-and its dependencies.
+containerized dbt full development environment.
 
+## Features
+
+This respository has several features to help get a new dbt project started, or
+enhance an existing one, including:
+
+* A containerized development environment -- Simply run `inv dbt-shell` and run all your
+  dbt commands, knowing that everyone else on your team is running the same version
+  of dbt and dependencies.
+* [dtspec](https://github.com/inside-track/dtspec) testing -- The dbt shell environment
+  comes installed with the dtspec testing package and the CLI tools needed to make
+  it work easily with dbt.
+* [SQLfluff](https://docs.sqlfluff.com/en/stable/) -- The dbt shell also comes with
+  SQLfluff, which will lint your dbt SQL code.  This ensures that all of your team is
+  following the same code style best practices.  No more internal wars over SQL formatting!
+* [GitHub Actions](https://docs.github.com/en/actions) -- This project comes with
+  a basic github action workflow (in [.github/workflows](.github/workflows)).  This workflow
+  will use GitHub Actions to lint and test your code every time it is changed
+  and pushed to GitHub.  Modify as you see fit to build out your own CI/CD processes.
+* [Invoke](http://www.pyinvoke.org/) task execution for automating various
+  [project tasks](tasks.py) using Python.
 
 ## Setup
 
-Of course, you'll need to download and install [docker community
-edition](https://www.docker.com/).  Additionally, you should be using
-a Python environment mananger like
+First, you'll need to download and install [docker community
+edition](https://www.docker.com/).  It is strongly recommended that you
+install a Python environment manager like
 [miniconda](https://conda.io/miniconda.html).  After installing miniconda,
 create a minconda environment for this project via
 
@@ -63,6 +81,15 @@ Then run the dtspec tests with:
 
     dtspec test-dbt
 
+### SQLFluff
+
+In the dbt shell continer, you can also use [SQLfluff](https://docs.sqlfluff.com/en/stable/)
+to lint your dbt SQL code.  Simply run
+
+    sqlfluff lint models
+
+The SQLFluff configuration file is found in [dbt/.sqlfluff](dbt/.sqlfluff).
+
 ## Use
 
 ### Next steps for your project
@@ -80,8 +107,8 @@ Examine the `dbt/profiles.yml` file in this project to how it is used.
 
 If you need to add or modify the environment variables that get set in
 the container, you only need to edit the `config_template.env` file.
-This file too should not contain any secrets, as it merely lists out
-the custom environment variables with some non-secret defaults. After
+This file also should not contain any secrets, as it merely lists out
+the customizable environment variables with some non-secret defaults. After
 modifying this file, rerun `inv config` to set any secrets.
 
 ### A note about secrets
