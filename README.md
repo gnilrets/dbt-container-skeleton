@@ -5,6 +5,24 @@ containerized dbt development environment.  This helps teams work
 together by ensuring that everyone is using the same version of dbt
 and its dependencies.
 
+## Features
+
+This respository has several features to help get a new dbt project started, or
+enhance an existing one, including:
+
+* A containerized development environment -- Simply run `inv dbt-shell` and run all your
+  dbt commands, knowing that everyone else on your team is running the same version
+  of dbt and dependencies.
+* [dtspec](https://github.com/inside-track/dtspec) testing -- The dbt shell environment
+  comes installed with the dtspec testing package and the CLI tools needed to make
+  it work easily with dbt.
+* [SQLfluff](https://docs.sqlfluff.com/en/stable/) -- The dbt shell also comes with
+  SQLfluff, which will lint your dbt SQL code.  This ensures that your team is
+  following the same code style best practices.  No more internal wars over SQL formatting!
+* [GitHub Actions](https://docs.github.com/en/actions) -- This project comes with
+  a basic github action workflow (in [.github/workflows](.github/workflows)).  This workflow
+  will use GitHub Actions to lint and test your code every time it is changed
+  and pushed to GitHub.
 
 ## Setup
 
@@ -62,6 +80,15 @@ To run those, first create a test database on your host's postgres server named
 Then run the dtspec tests with:
 
     dtspec test-dbt
+
+### SQLFluff
+
+In the dbt shell continer, you can also use [SQLfluff](https://docs.sqlfluff.com/en/stable/)
+to lint your dbt SQL code.  Simply run
+
+    sqlfluff lint models
+
+The SQLFluff configuration file is found in [dbt/.sqlfluff](dbt/.sqlfluff).
 
 ## Use
 
