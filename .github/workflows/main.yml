@@ -61,12 +61,13 @@ jobs:
         run: docker save -o docker-cache.tar dbt-runner
 
 
-      - name: Run linters
-        run: inv lint
       - name: Initialize test database
         run: |
           PGPASSWORD=${POSTGRES_PASSWORD} createdb -h ${POSTGRES_HOST} -U ${POSTGRES_USER} ${POSTGRES_DBNAME}_dtspec
           inv init-test-db --ci
+
+      - name: Run linters
+        run: inv lint --ci
 
       - name: Run dtpsec test
         run: inv dtspec-test-dbt --ci

@@ -16,6 +16,7 @@ ENV LANG C.UTF-8
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /dbt-runner
 ENV DBT_PROFILES_DIR /dbt-runner/dbt
+ENV DBT_MODULES_DIR /dbt_modules
 WORKDIR /dbt-runner
 
 # Conveniences
