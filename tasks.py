@@ -137,8 +137,12 @@ def dbt_shell(ctx, docker_args=''):
     ))
 
 @task
-def lint(ctx, docker_args=''):
+def lint(ctx, docker_args='', ci=False):
     'Runs all linters'
+
+    if ci:
+        docker_args += '--network=host'
+
     ctx.run(docker_run_dbt_cmd(
         '"sqlfluff lint models"',
         interactive=False,
