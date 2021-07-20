@@ -1,3 +1,10 @@
+-- This model is materialized as a view as an integration test for dtspec
+{{
+  config(
+    materialized='view'
+  )
+}}
+
 with customers as (
 
     select * from {{ ref('stg_customers') }}
