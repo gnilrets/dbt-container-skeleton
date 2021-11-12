@@ -1,6 +1,8 @@
 import os
 import json
 import pathlib
+import yaml
+import getpass
 
 from invoke import task
 from cryptography.fernet import Fernet
@@ -32,16 +34,24 @@ def read_config_template():
     return config_template
 
 
+def read_env_template():
+    with open('./env_template.yml', 'r') as template_file:
+        env_template = yaml.safe_load(template_file)
+    return env_template
+
 def read_config():
-    'Reads the encrypted configuration file'
+    '''
+    Reads the encrypted configuration file.
+    If no file exists, fetches env vars from the host that are defined in the config template.
+    '''
 
     fencrypt = Fernet(get_secret_key())
 
     if not os.path.exists(CONFIG_FILENAME):
-        default_config = read_config_template()
+        env_template = read_env_template()
         config = {
-            key: os.environ.get(key, value)
-            for key, value in default_config.items()
+            var: os.environ.get(var, params['default'])
+            for var, params in env_template['variables'].items()
         }
         return config
 
@@ -68,18 +78,27 @@ def config_show(ctx):
 
 @task
 def config(ctx):
-    'Set dbt container configuration and environment variables'
+    env_template = read_env_template()
 
+    config = {}
+    current_config = read_config()
+    print("---\n" + env_template['description'])
+    for var, params in env_template['variables'].items():
+        if params.get('user', True):
+            print(f"-\n{var}: {params['description']}")
+        current_value = current_config.get(var) or params['default'] or ''
 
-    config_template = read_config_template()
-    config = {**config_template, **read_config()}
+        displayed_value = current_value
+        input_func = input
+        if params.get('secret', False):
+            displayed_value = '***' + current_value[-3:]
+            input_func = getpass.getpass
 
-    print('NOTE: Press enter at any time to accept the default or existing value. Use "None" to indicate Null/None')
-    for key, value in config.items():
-        user_value = input('{} ({}): '.format(key, '***' + (value or '')[-3:]))
-        config[key] = user_value or config[key]
-        if user_value == 'None':
-            config[key] = None
+        user_value = None
+        if params.get('user', True):
+            user_value = input_func('{} (Currently: {}): '.format(var, displayed_value))
+
+        config[var] = user_value or current_value
 
     write_config(config)
 
@@ -113,8 +132,11 @@ def docker_run_dbt_cmd(command, interactive=False, docker_args=''):
     config = read_config()
     envs = []
     for key, value in config.items():
-        os.environ[key] = value or ''
-        envs.append(key)
+        env_var = key.replace('*', '')
+
+        # Existing environment variables override those defined in config file
+        os.environ[env_var] = os.environ.get(env_var, value or '')
+        envs.append(env_var)
     envs_arg = ' '.join(['--env ' + env for env in envs])
 
     project_root='/dbt-runner'
@@ -144,7 +166,7 @@ def lint(ctx, docker_args='', ci=False):
         docker_args += '--network=host'
 
     ctx.run(docker_run_dbt_cmd(
-        '"sqlfluff lint models"',
+    '"sqlfluff lint models"',
         interactive=False,
         docker_args=docker_args
     ))
