@@ -1,0 +1,38 @@
+---
+
+# This is a template to define default environment variables that will be set when you
+# spin up a dbt-shell container.
+# This file should be committed to version control and therefore DO NOT PUT secrets in this file.
+# Generally, this file should not be edited by a user.  User values are configured via `inv config`.
+
+description: |
+  Configure your development environment.
+
+  Set the default environment variables that will be defined when you spin
+  up a dbt-shell container.  Press enter to accept the existing value.
+
+  Default values are set here, but any environment variables defined on the host
+  when a dbt-shell is started will override the defaults defined here.
+
+variables:
+  POSTGRES_HOST:
+    description: Name of the postgres host.
+    default: host.docker.internal
+
+  POSTGRES_USER:
+    description: Postgres username.
+    default: yournamehere
+
+  POSTGRES_PASSWORD:
+    description: Postgres password.  May leave blank if running Postgres locally on host.
+    default: Null
+    secret: True
+
+  POSTGRES_DBNAME:
+    description: Name of postgres database
+    default: dbt_container_skeleton
+
+  DTSPEC_LOG_LEVEL:
+    description: Default log level for running dtspec tests
+    default: INFO
+    user: False

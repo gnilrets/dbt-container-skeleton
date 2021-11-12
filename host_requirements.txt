@@ -18,6 +18,8 @@ pip-tools==6.0.1
     # via -r host_requirements.in
 pycparser==2.20
     # via cffi
+pyyaml==6.0
+    # via -r host_requirements.in
 toml==0.10.2
     # via pep517
 
