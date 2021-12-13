@@ -1,3 +1,4 @@
-dbt
+dbt-postgres
 dtspec
 sqlfluff
+sqlfluff-templater-dbt

@@ -79,7 +79,7 @@ To run those, first create a test database on your host's postgres server named
 
 Then run the dtspec tests with:
 
-    dtspec test-dbt
+    dtspec dtspec-test-dbt
 
 ### SQLFluff
 
@@ -133,6 +133,26 @@ All of the `inv` commands are run via
 see a list of available commads, run
 
     inv -l
+
+
+### Upgrading/adding python packages
+
+You will want to make sure that the python packages used by this project
+are kept up to date.  There is a handy invoke task configured to upgrade
+these packages (using [pip-tools](https://github.com/jazzband/pip-tools)) by running:
+
+    inv requirements-upgrade
+
+This will upgrade all of the packages listed in `requirements.in` and their
+dependencies.
+
+If you ever need to add a Python package to this project, add it to the `requirements.in` file
+and run
+
+    inv requirements-compile
+
+This will add the new package to the project, but **will not** upgrade the other packages
+listed in `requirements.in`.
 
 
 ### When to build?
