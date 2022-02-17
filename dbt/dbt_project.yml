@@ -25,6 +25,9 @@ clean-targets:         # directories to be removed by `dbt clean`
     - "target"
     - "dbt_modules"
 
+vars:
+  constants:
+    OPEN_END_DATE: "'2999-12-31 23:59:59'::TIMESTAMP"
 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models

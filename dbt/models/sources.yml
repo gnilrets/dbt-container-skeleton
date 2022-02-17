@@ -15,3 +15,5 @@ sources:
       - name: raw_customers
       - name: raw_orders
       - name: raw_payments
+      - name: raw_advances
+      - name: raw_provider_accounts

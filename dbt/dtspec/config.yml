@@ -27,6 +27,9 @@ source_environments:
         - raw_customers
         - raw_orders
         - raw_payments
+        - raw_advances
+        - raw_provider_accounts
+
 
     # In order to run tests, we need to replicate the table schemas in the test environment.
     # The schema section here contains credentials for a database where those tables are defined.

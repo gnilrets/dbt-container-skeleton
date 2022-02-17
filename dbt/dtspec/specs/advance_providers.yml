@@ -1,0 +1,158 @@
+---
+
+sources:
+  - source: {{ dbt_source('raw', 'raw_advances') }}
+    identifier_map:
+      - column: advance_id
+        identifier:
+          name: generic
+          attribute: id
+      - column: provider_account_id
+        identifier:
+          name: generic
+          attribute: id
+      - column: dbt_scd_id
+        identifier:
+          name: generic
+          attribute: external_id
+
+  - source: {{ dbt_source('raw', 'raw_provider_accounts') }}
+    identifier_map:
+      - column: provider_account_id
+        identifier:
+          name: generic
+          attribute: id
+      - column: dbt_scd_id
+        identifier:
+          name: generic
+          attribute: external_id
+
+targets:
+  - target: {{ dbt_ref('stg_advance_providers') }}
+    identifier_map:
+      - column: advance_id
+        identifier:
+          name: generic
+          attribute: id
+      - column: provider_account_id
+        identifier:
+          name: generic
+          attribute: id
+
+scenarios:
+  - scenario: trange join example
+
+    cases:
+      - case: Simplest trange join
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_advances') }}
+              table: |
+                | advance_id | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -          | -                   | -                   | -                   |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2999-12-31 23:59:59 |
+
+            - source: {{ dbt_source('raw', 'raw_provider_accounts') }}
+              table: |
+                | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -                   | -                   | -                   |
+                | prov1               | 2022-01-01 00:00:01 | 2999-12-31 23:59:59 |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('stg_advance_providers') }}
+              table: |
+                | advance_id | provider_account_id | valid_from          | valid_to            | is_current |
+                | -          | -                   | -                   | -                   | -          |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2999-12-31 23:59:59 | {True}     |
+
+      - case: trange join - snapshotting on left side
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_advances') }}
+              table: |
+                | advance_id | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -          | -                   | -                   | -                   |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2022-01-20 00:00:01 |
+                | adv1       | prov1               | 2022-01-20 00:00:01 | 2999-12-31 23:59:59 |
+
+            - source: {{ dbt_source('raw', 'raw_provider_accounts') }}
+              table: |
+                | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -                   | -                   | -                   |
+                | prov1               | 2022-01-01 00:00:01 | 2999-12-31 23:59:59 |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('stg_advance_providers') }}
+              table: |
+                | advance_id | provider_account_id | valid_from          | valid_to            | is_current |
+                | -          | -                   | -                   | -                   | -          |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2022-01-20 00:00:01 | {False}    |
+                | adv1       | prov1               | 2022-01-20 00:00:01 | 2999-12-31 23:59:59 | {True}     |
+              by:
+                - advance_id
+                - valid_from
+
+
+      - case: trange join - snapshotting both sides
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_advances') }}
+              table: |
+                | advance_id | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -          | -                   | -                   | -                   |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2022-01-20 00:00:01 |
+                | adv1       | prov1               | 2022-01-20 00:00:01 | 2999-12-31 23:59:59 |
+
+            - source: {{ dbt_source('raw', 'raw_provider_accounts') }}
+              table: |
+                | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -                   | -                   | -                   |
+                | prov1               | 2022-01-01 00:00:01 | 2022-01-10 00:00:01 |
+                | prov1               | 2022-01-10 00:00:01 | 2999-12-31 23:59:59 |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('stg_advance_providers') }}
+              table: |
+                | advance_id | provider_account_id | valid_from          | valid_to            | is_current |
+                | -          | -                   | -                   | -                   | -          |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2022-01-10 00:00:01 | {False}    |
+                | adv1       | prov1               | 2022-01-10 00:00:01 | 2022-01-20 00:00:01 | {False}    |
+                | adv1       | prov1               | 2022-01-20 00:00:01 | 2999-12-31 23:59:59 | {True}     |
+              by:
+                - advance_id
+                - valid_from
+
+      - case: trange join - left side key change
+        factory:
+          data:
+            - source: {{ dbt_source('raw', 'raw_advances') }}
+              table: |
+                | advance_id | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -          | -                   | -                   | -                   |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2022-01-20 00:00:01 |
+                | adv1       | prov2               | 2022-01-20 00:00:01 | 2999-12-31 23:59:59 |
+
+            - source: {{ dbt_source('raw', 'raw_provider_accounts') }}
+              table: |
+                | provider_account_id | dbt_valid_from      | dbt_valid_to        |
+                | -                   | -                   | -                   |
+                | prov1               | 2022-01-01 00:00:01 | 2999-12-31 23:59:59 |
+                | prov2               | 2022-01-10 00:00:01 | 2022-01-15 00:00:01 |
+                | prov2               | 2022-01-15 00:00:01 | 2022-01-25 00:00:01 |
+                | prov2               | 2022-01-25 00:00:01 | 2999-12-31 23:59:59 |
+
+        expected:
+          data:
+            - target: {{ dbt_ref('stg_advance_providers') }}
+              table: |
+                | advance_id | provider_account_id | valid_from          | valid_to            | is_current |
+                | -          | -                   | -                   | -                   | -          |
+                | adv1       | prov1               | 2022-01-01 00:00:01 | 2022-01-20 00:00:01 | {False}    |
+                | adv1       | prov2               | 2022-01-20 00:00:01 | 2022-01-25 00:00:01 | {False}    |
+                | adv1       | prov2               | 2022-01-25 00:00:01 | 2999-12-31 23:59:59 | {True}     |
+              by:
+                - advance_id
+                - valid_from

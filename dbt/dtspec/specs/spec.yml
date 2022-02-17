@@ -7,6 +7,8 @@ identifiers:
     attributes:
       - field: id
         generator: unique_integer
+      - field: external_id
+        generator: unique_string
 
 # All the raw sources used in jaffle_shop
 sources:
