@@ -21,7 +21,7 @@ final as (
         orders.status,
         {% for payment_method in payment_methods -%}
 
-        order_payments.{{payment_method}}_amount,
+        order_payments.{{ payment_method }}_amount,
 
         {% endfor -%}
 

@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.9-slim
 
 RUN apt-get update \
     && apt-get install -y \
@@ -6,6 +6,8 @@ RUN apt-get update \
         libpq-dev \
         git \
         bash-completion \
+        build-essential \
+        cmake \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,6 +22,7 @@ ENV DBT_MODULES_DIR /dbt_modules
 WORKDIR /dbt-runner
 
 # Conveniences
+ENV PROMPT_COMMAND history -a
 RUN echo 'source /usr/share/bash-completion/bash_completion' >> /etc/bash.bashrc
 RUN echo 'export HISTFILE=/dbt-runner/.developer/history' >> $HOME/.bashrc
 RUN echo 'mkdir -p /dbt-runner/.developer && touch /dbt-runner/.developer/bashrc && source /dbt-runner/.developer/bashrc' >> $HOME/.bashrc
