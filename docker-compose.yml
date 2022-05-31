@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+
+  dbt-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - POSTGRES_HOST
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DBNAME
+    depends_on:
+      - postgres
+    tty: true
+    volumes:
+      - ".:/dbt-runner"
+    networks:
+      - default
+
+  postgres:
+    image: postgres:14.3-alpine
+    environment:
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 5432
+    command: [
+      "-c",
+      "fsync=off",
+      "-c",
+      "synchronous_commit=off",
+      "-c",
+      "full_page_writes=off"
+    ]
+    tmpfs: /var/lib/postgresql/data:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - "./postgres_init/mocked_db.sql:/docker-entrypoint-initdb.d/init.sql"
+    networks:
+      - default
+
+networks:
+  default:

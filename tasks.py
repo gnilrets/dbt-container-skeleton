@@ -121,55 +121,89 @@ def requirements_upgrade(ctx):
     ctx.run('pip-compile -U requirements.in')
 
 @task
-def build(ctx, ci=False):
-    'Build the dbt runner container'
+def build(ctx):
+    "Build the dbt runner container"
 
-    cache_from_arg = '--cache-from=dbt-runner' if ci else ''
-    ctx.run(f'docker build -t dbt-runner {cache_from_arg} -f Dockerfile .')
+    ctx.run(
+        f"docker-compose -f docker-compose.yml build dbt-runner"
+    )
 
 
-def docker_run_dbt_cmd(command, interactive=False, docker_args=''):
+@task
+def up(ctx):
+    "Start the dbt runner container"
+
+    ctx.run(
+        f"docker-compose -f docker-compose.yml up -d dbt-runner"
+    )
+
+
+
+@task
+def down(ctx):
+    "stop all containers"
+
+    ctx.run(f"docker-compose -f docker-compose.yml down")
+
+
+def build_envs_arg():
     config = read_config()
     envs = []
     for key, value in config.items():
-        env_var = key.replace('*', '')
-
-        # Existing environment variables override those defined in config file
-        os.environ[env_var] = os.environ.get(env_var, value or '')
-        envs.append(env_var)
-    envs_arg = ' '.join(['--env ' + env for env in envs])
-
-    project_root='/dbt-runner'
-    mount_project_arg = f'-v ${{PWD}}:{project_root}'
-
-    interactive_arg = ''
-    if interactive:
-        interactive_arg = '-it'
-
-    return f'docker run --rm {interactive_arg} {envs_arg} {mount_project_arg} -w {project_root}/dbt {docker_args} dbt-runner {command}'
+        os.environ[key] = value or ""
+        envs.append(f"{key}={value}")
+    envs_arg = " ".join(["-e " + env for env in envs])
+    return envs_arg
 
 
-@task
-def dbt_shell(ctx, docker_args=''):
-    'Open a shell to the dbt runner container'
-    ctx.run(docker_run_dbt_cmd(
-        '/bin/bash',
-        interactive=True,
-        docker_args=docker_args
-    ))
+def dbt_exec(command, docker_compose_args="", command_args=""):
+    docker_service = "dbt-runner"
+    envs_arg = build_envs_arg()
+
+    if command == "shell":
+        command = "/bin/bash"
+
+    return f"docker-compose -f docker-compose.yml exec {envs_arg} --workdir /dbt-runner/dbt {docker_compose_args} {docker_service} {command} {command_args}"
+
 
 @task
-def lint(ctx, docker_args='', ci=False):
-    'Runs all linters'
+def dbt_shell(ctx, docker_args=""):
+    """Open a bash shell in the dbt runner container"""
+    ctx.run(dbt_exec("shell"))
 
-    if ci:
-        docker_args += '--network=host'
 
-    ctx.run(docker_run_dbt_cmd(
-    '"sqlfluff lint models"',
-        interactive=False,
-        docker_args=docker_args
-    ))
+@task(pre=[up])
+def dbt_compile(ctx):
+    """Run ``dbt compile`` in the dbt-runner container."""
+    ctx.run(dbt_exec("dbt compile"))
+
+
+@task(pre=[up])
+def dbt_docs(ctx, no_compile=False):
+    """Run ``dbt docs generate`` in the dbt-runner container."""
+    command = "dbt docs generate"
+    if no_compile is True:
+        command += " --no-compile"
+    ctx.run(dbt_exec(command))
+
+
+@task(pre=[up])
+def dbt_seed(ctx,):
+    """Run ``dbt seed`` in the dbt-runner container."""
+    ctx.run(dbt_exec("dbt seed"))
+
+
+@task(pre=[up, dbt_seed])
+def dbt_run(ctx):
+    """Run ``dbt run`` in the dbt-runner container."""
+    ctx.run(dbt_exec("dbt run"))
+
+
+@task(pre=[up])
+def dbt_test(ctx):
+    """Run ``dbt test`` in the dbt-runner container."""
+    ctx.run(dbt_exec("dbt test"))
+
 
 @task
 def init_test_db(ctx, docker_args='', ci=False):
@@ -196,3 +230,29 @@ def dtspec_test_dbt(ctx, docker_args='', ci=False):
         interactive=False,
         docker_args=docker_args
     ))
+
+@task()
+def sql_shell(ctx):
+    """Open a psql prompt, connected to the target database"""
+    docker_service = "dbt-runner"
+    envs_arg = build_envs_arg()
+
+    config = read_config()
+
+    # this sets the default search path so that commands like \dv just work
+    envs_arg += ' -e PGOPTIONS="--search_path=public"'.format(
+        **config
+    )
+
+    envs_arg += " -e PGPASSWORD={POSTGRES_PASSWORD}".format(**config)
+
+    command = (
+        "psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DBNAME}".format(
+            **config
+        )
+    )
+
+    ctx.run(
+        f"docker-compose -f docker-compose.yml exec {envs_arg} {docker_service} {command}"
+    )
+

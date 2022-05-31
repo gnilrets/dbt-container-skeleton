@@ -38,4 +38,4 @@ COPY dbt/packages.yml /build_dbt_deps/packages.yml
 RUN cd /build_dbt_deps \
     && dbt deps
 
-ENTRYPOINT ["/bin/bash", "-c"]
+# ENTRYPOINT ["/bin/bash", "-c"]
