@@ -11,6 +11,8 @@ services:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_DBNAME
+    ports:
+      - "8000:8000"
     depends_on:
       - postgres
     tty: true
@@ -18,13 +20,14 @@ services:
       - ".:/dbt-runner"
     networks:
       - default
+    platform: linux/amd64
 
   postgres:
     image: postgres:14.3-alpine
     environment:
       - POSTGRES_PASSWORD=password
     ports:
-      - 5432
+      - "54321:5432"
     command: [
       "-c",
       "fsync=off",
@@ -43,6 +46,7 @@ services:
       - "./postgres_init/mocked_db.sql:/docker-entrypoint-initdb.d/init.sql"
     networks:
       - default
+    platform: linux/amd64
 
 networks:
   default:
